@@ -82,7 +82,7 @@
     </div>
 
     <!-- Controles movidos a la parte inferior izquierda -->
-    <div id="control-buttons">
+    <div id="control-buttonss">
         <button id="change-formation-btn" class="control-button">Formation</button>
         <button id="pause-play-btn" class="control-button">Pause</button>
         <button id="reset-camera-btn" class="control-button">Reset Cam</button>
@@ -98,7 +98,171 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="voice-assistant.js"></script>
+ <script>
+        class DraggablePanel {
+            constructor(elementId) {
+                this.panel = document.getElementById(elementId);
+                this.header = this.panel.querySelector('.ui-panel-header');
+                this.boundaryIndicator = document.getElementById('boundary-indicator');
+                
+                this.isDragging = false;
+                this.currentX = 0;
+                this.currentY = 0;
+                this.initialX = 0;
+                this.initialY = 0;
+                this.xOffset = 0;
+                this.yOffset = 0;
 
+                this.init();
+            }
+
+            init() {
+                // Eventos de mouse
+                this.header.addEventListener('mousedown', this.dragStart.bind(this));
+                document.addEventListener('mousemove', this.drag.bind(this));
+                document.addEventListener('mouseup', this.dragEnd.bind(this));
+
+                // Eventos táctiles para dispositivos móviles
+                this.header.addEventListener('touchstart', this.dragStart.bind(this), { passive: false });
+                document.addEventListener('touchmove', this.drag.bind(this), { passive: false });
+                document.addEventListener('touchend', this.dragEnd.bind(this));
+
+                // Prevenir selección de texto
+                this.header.addEventListener('selectstart', (e) => e.preventDefault());
+            }
+
+            dragStart(e) {
+                if (e.type === 'touchstart') {
+                    this.initialX = e.touches[0].clientX - this.xOffset;
+                    this.initialY = e.touches[0].clientY - this.yOffset;
+                } else {
+                    this.initialX = e.clientX - this.xOffset;
+                    this.initialY = e.clientY - this.yOffset;
+                }
+
+                if (e.target === this.header) {
+                    this.isDragging = true;
+                    this.panel.classList.add('dragging');
+                    this.boundaryIndicator.classList.add('show');
+                }
+            }
+
+            drag(e) {
+                if (this.isDragging) {
+                    e.preventDefault();
+
+                    if (e.type === 'touchmove') {
+                        this.currentX = e.touches[0].clientX - this.initialX;
+                        this.currentY = e.touches[0].clientY - this.initialY;
+                    } else {
+                        this.currentX = e.clientX - this.initialX;
+                        this.currentY = e.clientY - this.initialY;
+                    }
+
+                    this.xOffset = this.currentX;
+                    this.yOffset = this.currentY;
+
+                    // Obtener límites de la ventana
+                    const rect = this.panel.getBoundingClientRect();
+                    const maxX = window.innerWidth - rect.width;
+                    const maxY = window.innerHeight - rect.height;
+
+                    // Aplicar límites
+                    this.xOffset = Math.max(0, Math.min(this.xOffset, maxX));
+                    this.yOffset = Math.max(0, Math.min(this.yOffset, maxY));
+
+                    this.setTranslate(this.xOffset, this.yOffset);
+                }
+            }
+
+            dragEnd() {
+                if (this.isDragging) {
+                    this.isDragging = false;
+                    this.panel.classList.remove('dragging');
+                    this.boundaryIndicator.classList.remove('show');
+
+                    // Efecto de "snap" suave a los bordes si está cerca
+                    this.snapToEdges();
+                }
+            }
+
+            snapToEdges() {
+                const rect = this.panel.getBoundingClientRect();
+                const snapThreshold = 20;
+                let newX = this.xOffset;
+                let newY = this.yOffset;
+
+                // Snap horizontal
+                if (rect.left < snapThreshold) {
+                    newX = 0;
+                } else if (window.innerWidth - rect.right < snapThreshold) {
+                    newX = window.innerWidth - rect.width;
+                }
+
+                // Snap vertical
+                if (rect.top < snapThreshold) {
+                    newY = 0;
+                } else if (window.innerHeight - rect.bottom < snapThreshold) {
+                    newY = window.innerHeight - rect.height;
+                }
+
+                // Aplicar snap suave si es necesario
+                if (newX !== this.xOffset || newY !== this.yOffset) {
+                    this.xOffset = newX;
+                    this.yOffset = newY;
+                    this.panel.style.transition = 'transform 0.3s ease-out';
+                    this.setTranslate(this.xOffset, this.yOffset);
+                    
+                    setTimeout(() => {
+                        this.panel.style.transition = 'transform 0.1s ease-out';
+                    }, 300);
+                }
+            }
+
+            setTranslate(xPos, yPos) {
+                this.panel.style.transform = `translate(${xPos}px, ${yPos}px)`;
+            }
+        }
+
+        // Inicializar el panel arrastrable cuando se carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            new DraggablePanel('theme-selector');
+
+            // Funcionalidad del slider de densidad
+            const densitySlider = document.getElementById('density-slider');
+            const densityValue = document.getElementById('density-value');
+
+            densitySlider.addEventListener('input', (e) => {
+                densityValue.textContent = `${e.target.value}%`;
+            });
+
+            // Funcionalidad de los botones de tema
+            const themeButtons = document.querySelectorAll('.theme-button');
+            themeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remover selección anterior
+                    themeButtons.forEach(btn => btn.style.boxShadow = '');
+                    
+                    // Marcar el seleccionado
+                    button.style.boxShadow = '0 0 15px rgba(255, 120, 50, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.2)';
+                });
+            });
+        });
+
+        // Ajustar posición del panel al redimensionar la ventana
+        window.addEventListener('resize', () => {
+            const panel = document.getElementById('theme-selector');
+            const rect = panel.getBoundingClientRect();
+            
+            if (rect.right > window.innerWidth) {
+                panel.style.transform = `translate(${window.innerWidth - rect.width}px, ${rect.top}px)`;
+            }
+            
+            if (rect.bottom > window.innerHeight) {
+                panel.style.transform = `translate(${rect.left}px, ${window.innerHeight - rect.height}px)`;
+            }
+        });
+    </script>
      <script type="importmap">
     {
       "imports": {
