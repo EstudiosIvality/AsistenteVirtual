@@ -67,8 +67,9 @@
     </div>
 
     <!-- Selector de temas movido a la izquierda, debajo del panel del asistente -->
-    <div id="theme-selector" class="ui-panel">
-        <div id="theme-selector-title">Visual Theme</div>
+     <div id="theme-selector" class="ui-panel">
+        <div class="ui-panel-header" id="theme-selector-title">Visual Theme</div>
+      <div class="ui-panel-body">
         <div class="theme-grid">
             <button class="theme-button" id="theme-1" data-theme="0" aria-label="Theme 1"></button>
             <button class="theme-button" id="theme-2" data-theme="1" aria-label="Theme 2"></button>
@@ -79,8 +80,8 @@
             <div class="density-label"><span>Density</span><span id="density-value">100%</span></div>
             <input type="range" min="20" max="100" value="100" class="density-slider" id="density-slider" aria-label="Network Density">
         </div>
+      </div>  
     </div>
-
     <!-- Controles movidos a la parte inferior izquierda -->
     <div id="control-buttonss">
         <button id="change-formation-btn" class="control-button">Formation</button>
@@ -88,10 +89,7 @@
         <button id="reset-camera-btn" class="control-button">Reset Cam</button>
     </div>
 
-    <!-- Instrucciones movidas a la parte inferior derecha -->
-    <div id="instructions-container" class="ui-panel">
-        <div>Haz clic o toca para crear pulsos de energía a través de la red. Arrastra para rotar.</div>
-    </div>
+    
 
     <canvas id="neural-network-canvas"></canvas>
 
